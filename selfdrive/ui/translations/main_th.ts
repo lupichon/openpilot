@@ -1061,6 +1061,18 @@ This may take up to a minute.</source>
         <source>Enable driver monitoring even when openpilot is not engaged.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>-</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Velocity Control</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>Updater</name>
