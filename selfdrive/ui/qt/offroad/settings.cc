@@ -82,47 +82,6 @@ TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
                                           longi_button_texts);
 
 
-
-  /*********************/
-  QLabel * velocity_value = new QLabel("0", this);
-  velocity_value->setAlignment(Qt::AlignCenter);
-
-
-  QPushButton *increase_button = new QPushButton(tr("+"), this);
-  QPushButton *decrease_button = new QPushButton(tr("-"), this);
-
-
-  QHBoxLayout *velocity_layout = new QHBoxLayout();
-  velocity_layout->addWidget(decrease_button);
-  velocity_layout->addWidget(velocity_value);
-  velocity_layout->addWidget(increase_button);
-
-
-  QWidget *velocity_widget = new QWidget(this);
-  velocity_widget->setLayout(velocity_layout);
-
-
-  addItem(new QLabel(tr("Velocity Control"), this));  // Titre
-  addItem(velocity_widget);
-
-
-  connect(increase_button, &QPushButton::clicked, this, [velocity_value]() {
-    int current_velocity = velocity_value->text().toInt();
-    current_velocity++;
-    velocity_value->setText(QString::number(current_velocity));
-  });
-
-
-  connect(decrease_button, &QPushButton::clicked, this, [velocity_value]() {
-    int current_velocity = velocity_value->text().toInt();
-    current_velocity--;
-    velocity_value->setText(QString::number(current_velocity));
-  });
-
-
-  /********************/
-
-
   // set up uiState update for personality setting
   QObject::connect(uiState(), &UIState::uiUpdate, this, &TogglesPanel::updateState);
 
