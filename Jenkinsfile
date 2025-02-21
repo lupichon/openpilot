@@ -79,6 +79,10 @@ def deviceStage(String stageName, String deviceType, List extra_env, def steps) 
         return
     }
 
+    if (isReplay()) {
+      error("REPLAYING TESTS IS NOT ALLOWED. FIX THEM INSTEAD.")
+    }
+
     def extra = extra_env.collect { "export ${it}" }.join('\n');
     def branch = env.BRANCH_NAME ?: 'master';
     def gitDiff = sh returnStdout: true, script: 'curl -s -H "Authorization: Bearer ${GITHUB_COMMENTS_TOKEN}" https://api.github.com/repos/commaai/openpilot/compare/master...${GIT_BRANCH} | jq .files[].filename || echo "/"', label: 'Getting changes'
@@ -99,7 +103,7 @@ def deviceStage(String stageName, String deviceType, List extra_env, def steps) 
             def diffPaths = args.diffPaths ?: []
             def cmdTimeout = args.timeout ?: 9999
 
-            if (branch != "master" && diffPaths && !hasPathChanged(gitDiff, diffPaths)) {
+            if (branch != "master" && !branch.contains("__jenkins_loop_") && diffPaths && !hasPathChanged(gitDiff, diffPaths)) {
               println "Skipping ${name}: no changes in ${diffPaths}."
               return
             } else {
@@ -121,6 +125,11 @@ def hasPathChanged(String gitDiff, List<String> paths) {
     }
   }
   return false
+}
+
+def isReplay() {
+  def replayClass = "org.jenkinsci.plugins.workflow.cps.replay.ReplayCause"
+  return currentBuild.rawBuild.getCauses().any{ cause -> cause.toString().contains(replayClass) }
 }
 
 def setupCredentials() {
@@ -161,7 +170,7 @@ node {
                          'testing-closet*', 'hotfix-*']
   def excludeRegex = excludeBranches.join('|').replaceAll('\\*', '.*')
 
-  if (env.BRANCH_NAME != 'master') {
+  if (env.BRANCH_NAME != 'master' && !env.BRANCH_NAME.contains('__jenkins_loop_')) {
     properties([
         disableConcurrentBuilds(abortPrevious: true)
     ])
@@ -199,7 +208,6 @@ node {
           step("build openpilot", "cd system/manager && ./build.py"),
           step("check dirty", "release/check-dirty.sh"),
           step("onroad tests", "pytest selfdrive/test/test_onroad.py -s", [timeout: 60]),
-          //["time to onroad", "pytest selfdrive/test/test_time_to_onroad.py"],
         ])
       },
       'HW + Unit Tests': {
@@ -207,8 +215,8 @@ node {
           step("build", "cd system/manager && ./build.py"),
           step("test pandad", "pytest selfdrive/pandad/tests/test_pandad.py", [diffPaths: ["panda", "selfdrive/pandad/"]]),
           step("test power draw", "pytest -s system/hardware/tici/tests/test_power_draw.py"),
-          step("test encoder", "LD_LIBRARY_PATH=/usr/local/lib pytest system/loggerd/tests/test_encoder.py"),
-          step("test pigeond", "pytest system/ubloxd/tests/test_pigeond.py"),
+          step("test encoder", "LD_LIBRARY_PATH=/usr/local/lib pytest system/loggerd/tests/test_encoder.py", [diffPaths: ["system/loggerd/"]]),
+          step("test pigeond", "pytest system/ubloxd/tests/test_pigeond.py", [diffPaths: ["system/ubloxd/"]]),
           step("test manager", "pytest system/manager/test/test_manager.py"),
         ])
       },
@@ -218,13 +226,22 @@ node {
           step("test pandad loopback", "pytest selfdrive/pandad/tests/test_pandad_loopback.py"),
         ])
       },
-      'camerad': {
+      'camerad AR0231': {
         deviceStage("AR0231", "tici-ar0231", ["UNSAFE=1"], [
           step("build", "cd system/manager && ./build.py"),
           step("test camerad", "pytest system/camerad/test/test_camerad.py", [timeout: 60]),
           step("test exposure", "pytest system/camerad/test/test_exposure.py"),
         ])
+      },
+      'camerad OX03C10': {
         deviceStage("OX03C10", "tici-ox03c10", ["UNSAFE=1"], [
+          step("build", "cd system/manager && ./build.py"),
+          step("test camerad", "pytest system/camerad/test/test_camerad.py", [timeout: 60]),
+          step("test exposure", "pytest system/camerad/test/test_exposure.py"),
+        ])
+      },
+      'camerad OS04C10': {
+        deviceStage("OS04C10", "tici-os04c10", ["UNSAFE=1"], [
           step("build", "cd system/manager && ./build.py"),
           step("test camerad", "pytest system/camerad/test/test_camerad.py", [timeout: 60]),
           step("test exposure", "pytest system/camerad/test/test_exposure.py"),

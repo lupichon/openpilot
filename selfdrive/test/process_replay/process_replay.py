@@ -5,24 +5,24 @@ import copy
 import json
 import heapq
 import signal
-import platform
 from collections import Counter, OrderedDict
 from dataclasses import dataclass, field
 from typing import Any
 from collections.abc import Callable, Iterable
 from tqdm import tqdm
 import capnp
+from openpilot.system.hardware.hw import Paths
 
 import cereal.messaging as messaging
 from cereal import car
 from cereal.services import SERVICE_LIST
 from msgq.visionipc import VisionIpcServer, get_endpoint_name as vipc_get_endpoint_name
 from opendbc.car.car_helpers import get_car, interfaces
+from opendbc.safety import ALTERNATIVE_EXPERIENCE
 from openpilot.common.params import Params
 from openpilot.common.prefix import OpenpilotPrefix
 from openpilot.common.timeout import Timeout
 from openpilot.common.realtime import DT_CTRL
-from panda.python import ALTERNATIVE_EXPERIENCE
 from openpilot.selfdrive.car.card import can_comm_callbacks
 from openpilot.system.manager.process_config import managed_processes
 from openpilot.selfdrive.test.process_replay.vision_meta import meta_from_camera_state, available_streams
@@ -780,8 +780,7 @@ def generate_params_config(lr=None, CP=None, fingerprint=None, custom_params=Non
 
 def generate_environ_config(CP=None, fingerprint=None, log_dir=None) -> dict[str, Any]:
   environ_dict = {}
-  if platform.system() != "Darwin":
-    environ_dict["PARAMS_ROOT"] = "/dev/shm/params"
+  environ_dict["PARAMS_ROOT"] = f"{Paths.shm_path()}/params"
   if log_dir is not None:
     environ_dict["LOG_ROOT"] = log_dir
 
