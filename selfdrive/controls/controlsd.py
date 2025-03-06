@@ -80,7 +80,7 @@ class Controls:
         self.LaC.update_live_torque_params(torque_params.latAccelFactorFiltered, torque_params.latAccelOffsetFiltered,
                                            torque_params.frictionCoefficientFiltered)
 
-    #long_plan = self.sm['longitudinalPlan']
+    long_plan = self.sm['longitudinalPlan']
     model_v2 = self.sm['modelV2']
 
     CC = car.CarControl.new_message()
@@ -105,17 +105,17 @@ class Controls:
       self.LoC.reset()
 
     # accel PID loop
-    #pid_accel_limits = self.CI.get_pid_accel_limits(self.CP, CS.vEgo, CS.vCruise * CV.KPH_TO_MS)
-    #actuators.accel = self.LoC.update(CC.longActive, CS, long_plan.aTarget, long_plan.shouldStop, pid_accel_limits)
-    actuators.accel = (RT + 1) - (LT + 1)
+    pid_accel_limits = self.CI.get_pid_accel_limits(self.CP, CS.vEgo, CS.vCruise * CV.KPH_TO_MS)
+    actuators.accel = self.LoC.update(CC.longActive, CS, long_plan.aTarget, long_plan.shouldStop, pid_accel_limits)
+    #actuators.accel = (RT + 1) - (LT + 1)
 
     # Steering PID loop and lateral MPC
     self.desired_curvature = clip_curvature(CS.vEgo, self.desired_curvature, model_v2.action.desiredCurvature)
     actuators.curvature = self.desired_curvature
-    actuators.steer, _, lac_log = self.LaC.update(CC.latActive, CS, self.VM, lp,
+    actuators.steer, actuators.steeringAngleDeg, lac_log = self.LaC.update(CC.latActive, CS, self.VM, lp,
                                                                             self.steer_limited, self.desired_curvature,
                                                                             self.calibrated_pose) # TODO what if not available
-    actuators.steeringAngleDeg = - 40 * LX
+    #actuators.steeringAngleDeg = - 40 * LX
     # Ensure no NaNs/Infs
     for p in ACTUATOR_FIELDS:
       attr = getattr(actuators, p)
