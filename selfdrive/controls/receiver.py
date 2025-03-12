@@ -14,13 +14,13 @@ def update_values(data):
             print(f"Mis à jour : LX={LX}, LY={LY}, RX={RX}, RY={RY}, LT={LT}, RT={RT}")
 
             if A :
-                accel = 1
+                accelReceiver = 1
             if B :
-                accel = 0
+                accelReceiver = 0
             if X :
-                steer = 1
+                steerReceiver = 1
             if Y :
-                steer = 0
+                steerReceiver = 0
         else:
             print(f"Erreur : Données incorrectes reçues -> {data}")
 
